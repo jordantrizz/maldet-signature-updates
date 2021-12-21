@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-DIR=$(pwd)
+DIR=~/git/maldet-signature-updates
 DATE=$(date "+%d/%m/%Y %H:%M:%S +%Z")
 
 _echo () {
@@ -18,13 +18,13 @@ processsigfile () {
 	_echo " - Extracting archive"
 	tar -zxvf $DIR/maldet-sigpack.tgz
 	_echo " - Committing to git."
-	git commit -am "Update on $DATE"
+	git -C $DIR commit -am "Update on $DATE"
 	git push		
 }
 
 _echo "Starting script in $DIR on $DATE"
 
-if [ ! -f .cursigver ]; then
+if [ ! -f $DIR/.cursigver ]; then
         _echo "First run, no .cursigver present"
         _echo "Grabbing signature file"
         getsigver
