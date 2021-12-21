@@ -14,7 +14,7 @@ getsigver () {
 
 processsigfile () {
 	_echo " - Downloading archive from https://cdn.rfxn.com/downloads/maldet-sigpack.tgz"
-	curl -O $DIR/maldet-sigpack.tgz https://cdn.rfxn.com/downloads/maldet-sigpack.tgz
+	curl -O --output $DIR/maldet-sigpack.tgz https://cdn.rfxn.com/downloads/maldet-sigpack.tgz
 	_echo " - Extracting archive"
 	tar -zxvf $DIR/maldet-sigpack.tgz
 	_echo " - Committing to git."
