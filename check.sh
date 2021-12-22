@@ -42,7 +42,10 @@ if [ $CURSIGVER == $LASTSIGVER ]; then
 	_echo "No signature update."
 else
 	_echo "Signatures updated."
+	_echo "Processing archive"
 	processsigfile
+	_echo "Updating .cursigver"
+	_echo $CURSIGVER > $DIR/.cursigver
 	
 fi
 
