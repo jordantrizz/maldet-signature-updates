@@ -63,11 +63,15 @@ comparefiles () {
         	filename="${f##*/}"
 		_echo " - Processing new/sigs/$filename against current/sigs/$filename"
 		diff_dat=$(diff $TEMP/new/sigs/$filename $TEMP/current/sigs/$filename -y --suppress-common-lines)
-		diff_dat_all+="$filename\n--\n$diff_dat \n--\n"
+		diff_dat_all+="${filename}\n"
+		diff_dat_all+="--\n"
+		diff_dat_all+="$diff_dat\n"
+		diff_dat_all+="--\n"
 	done
 	_echo "* Results *.dat"
         _echo "******************"
-        _echo -e $diff_dat_all
+        printf "$diff_dat_all"
+        printf "$diff_dat_all"  >> $DIR/check.log
         _echo "******************"
         _echo ""
 	_echo " - Done comparing files"
@@ -84,7 +88,7 @@ gitcommit () {
 	===================
 	$diff_rfxn
 	"	
-	git push		
+	#git push		
 }
 
 checksigupdate () {
