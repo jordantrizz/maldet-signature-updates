@@ -64,8 +64,7 @@ comparefiles () {
 		_echo " - Processing new/sigs/$filename against current/sigs/$filename"
 		diff_dat=$(diff $TEMP/new/sigs/$filename $TEMP/current/sigs/$filename -y --suppress-common-lines)
 		diff_dat_all+="${filename}\n"
-		diff_dat_all+="--\n"
-		diff_dat_all+="$diff_dat\n"
+		diff_dat_all+="* $diff_dat\n"
 		diff_dat_all+="--\n"
 	done
 	_echo "* Results *.dat"
@@ -80,13 +79,13 @@ comparefiles () {
 gitcommit () {
         _echo " - *** Committing to git."
         printf "Update on $DATE
-        Updated *.dat files
-        ===================
-        $diff_dat_all
+Changes to rfxn.hdb
+===================
+$diff_rfxn
 
-        Changes to rfxn.hdb
-        ===================
-        $diff_rfxn" | git -C $DIR commit -a -F -
+Updated *.dat files
+===================
+$diff_dat_all" | git -C $DIR commit -a -F -
         #git push
 }
 
