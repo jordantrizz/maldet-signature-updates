@@ -10,7 +10,7 @@ _echo () {
 }
 
 help () {
-	_echo "check.sh <start|compare|test|temp>"
+	_echo "check.sh <start|check|compare|test|temp>"
 }	
 
 getsigver () {
@@ -47,37 +47,51 @@ comparefiles () {
 	sed -i "s/\.[0-9]*$//g" $TEMP/current/sigs/rfxn.hdb
 	sed -i "s/\.[0-9]*$//g" $TEMP/new/sigs/*.dat
 	sed -i "s/\.[0-9]*$//g" $TEMP/current/sigs/*.dat
-	
-	_echo " - Comapre rfxn.hdb"
-	echo "Processing new/sigs/rfxn.hdb against current/sigs/rfxn.hdb"
+	_echo ""
+	_echo "* Comapre rfxn.hdb"
+	_echo "==============="
+	_echo " - Processing new/sigs/rfxn.hdb against current/sigs/rfxn.hdb"
 	diff_rfxn=$(diff $TEMP/new/sigs/rfxn.hdb $TEMP/current/sigs/rfxn.hdb -y --suppress-common-lines)
+	_echo "* Results *.dat"
 	_echo "******************"
 	_echo $diff_rfxn
 	_echo "******************"
-	 
-        _echo " - Compare *.dat"
+	_echo ""
+        _echo "* Compare *.dat"
+        _echo "==============="
         for f in $TEMP/new/sigs/*.dat; do
         	filename="${f##*/}"
-		echo "Processing new/sigs/$filename against current/sigs/$filename"
+		_echo " - Processing new/sigs/$filename against current/sigs/$filename"
 		diff_dat=$(diff $TEMP/new/sigs/$filename $TEMP/current/sigs/$filename -y --suppress-common-lines)
-		diff_dat_all+="\n$filename\n--\n$diff_dat \n--"
+		diff_dat_all+="$filename\n--\n$diff_dat \n--\n"
 	done
+	_echo "* Results *.dat"
         _echo "******************"
         echo -e $diff_dat_all
         echo -e $diff_dat_all  >> $DIR/check.log
         _echo "******************"
-	echo " - Done comparing files"
+        _echo ""
+	_echo " - Done comparing files"
 }
 
 gitcommit () {	
 	_echo " - *** Committing to git."
-	git -C $DIR commit -am "Update on $DATE"
+	git -C $DIR commit -am "Update on $DATE
+	Updated *.dat files
+	===================
+	$diff_dat_all
+	
+	Changes to rfxn.hdb
+	===================
+	$diff_rfxn
+	"	
 	git push		
 }
 
 checksigupdate () {
 	# Check for Signature Update	
 	_echo "* Checking for Signature Update"
+	getsigver
 
         # First time running?
         if [ ! -f $DIR/.cursigver ]; then
@@ -88,22 +102,12 @@ checksigupdate () {
                 LASTSIGVER=$(cat $DIR/.cursigver)
         fi
 		
-	if [ $CURSIGVER == $LASTSIGVER ]; then	
-		_echo " - No signature update."
-		_echo "Exiting"
+	if [ $CURSIGVER == $LASTSIGVER ]; then			
+		_echo "- No signature update detected"
+		UPDATE=no
 	else
-		_echo "* Signature update detected"
-		_echo " - Creating temp folders and files"
-		createtemp
-		_echo " - Processing signature archive"
-		processfiles
-		_echo " - Comparing Files"
-		comparefiles
-		_echo " - Commiting to git"
-		gitcommit
-		_echo " - Updating .cursigver"
-		_echo $CURSIGVER > $DIR/.cursigver
-		_echo "Process complete, exiting"
+		_echo "- Signature update detected"
+		UPDATE=yes
 	fi
 }
 
@@ -113,8 +117,28 @@ test () {
 
 start () {
         # Start process
-        _echo "* Starting script in $DIR on $DATE"
-        checksigupdate        
+        _echo "* Starting script in $DIR on $DATE"        
+        checksigupdate
+
+        if [ $UPDATE = "yes" ]; then        	
+		_echo " - Starting process!"
+       		_echo " - Creating temp folders and files"
+	        createtemp
+        
+	        _echo " - Processing signature archive"
+	        processfiles
+        
+	        _echo " - Comparing Files"
+	        comparefiles
+        
+	        _echo " - Commiting to git"
+	        gitcommit
+	        _echo " - Updating .cursigver"
+	        _echo $CURSIGVER > $DIR/.cursigver
+	        _echo "Process complete, exiting"
+	 else
+	 	_echo " - Exiting..."
+	 fi	 
 }
 
 # *** Main Loop
@@ -122,6 +146,7 @@ if [ ! $1 ]; then
         help
 else
         if [ "$1" = "start" ]; then start
+	elif [ "$1" = "check" ]; then checksigupdate
         elif [ "$1" = "compare" ]; then comparefiles
         elif [ "$1" = "test" ]; then test
         elif [ "$1" = "temp" ]; then createtemp
