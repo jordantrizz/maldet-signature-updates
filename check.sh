@@ -149,7 +149,7 @@ else
         elif [ "$1" = "compare" ]; then comparefiles
         elif [ "$1" = "test" ]; then test
         elif [ "$1" = "temp" ]; then createtemp
-        elif [ "$1" = "git" ]; then compare;gitcommit
+        elif [ "$1" = "git" ]; then comparefiles;gitcommit
         else help
         fi
 fi
