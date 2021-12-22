@@ -67,8 +67,7 @@ comparefiles () {
 	done
 	_echo "* Results *.dat"
         _echo "******************"
-        echo -e $diff_dat_all
-        echo -e $diff_dat_all  >> $DIR/check.log
+        _echo -e $diff_dat_all
         _echo "******************"
         _echo ""
 	_echo " - Done comparing files"
@@ -125,9 +124,6 @@ start () {
        		_echo " - Creating temp folders and files"
 	        createtemp
         
-	        _echo " - Processing signature archive"
-	        processfiles
-        
 	        _echo " - Comparing Files"
 	        comparefiles
         
@@ -150,6 +146,7 @@ else
         elif [ "$1" = "compare" ]; then comparefiles
         elif [ "$1" = "test" ]; then test
         elif [ "$1" = "temp" ]; then createtemp
+        elif [ "$1" = "git" ]; then gitcommit
         else help
         fi
 fi
