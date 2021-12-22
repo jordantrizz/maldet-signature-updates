@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
 DIR=~/git/maldet-signature-updates
 DATE=$(date "+%d/%m/%Y %H:%M:%S +%Z")
+TEMP=$DIR/temp
+SIGS=$DIR/sigs
 
 _echo () {
 	echo $@
 	echo $@ >> $DIR/check.log
-	}
+}
 	
 
 getsigver () {
@@ -17,7 +19,12 @@ processsigfile () {
 	curl -O --output $DIR/maldet-sigpack.tgz https://cdn.rfxn.com/downloads/maldet-sigpack.tgz
 	_echo " - Extracting archive"
 	tar -zxvf $DIR/maldet-sigpack.tgz
-	_echo " - Committing to git."
+}
+
+
+
+gitcommit () {	
+	_echo " - *** Committing to git."
 	git -C $DIR commit -am "Update on $DATE"
 	git push		
 }
@@ -44,6 +51,8 @@ else
 	_echo "Signatures updated."
 	_echo "Processing archive"
 	processsigfile
+	comparefiles
+	gitcommit
 	_echo "Updating .cursigver"
 	_echo $CURSIGVER > $DIR/.cursigver
 	
