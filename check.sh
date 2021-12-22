@@ -79,15 +79,14 @@ comparefiles () {
 
 gitcommit () {	
 	_echo " - *** Committing to git."
-	git -C $DIR commit -am "Update on $DATE
+	printf "Update on $DATE
 	Updated *.dat files
 	===================
 	$diff_dat_all
 	
 	Changes to rfxn.hdb
 	===================
-	$diff_rfxn
-	"	
+	$diff_rfxn" | git -C $DIR commit -a -F -
 	#git push		
 }
 
