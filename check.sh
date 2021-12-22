@@ -8,7 +8,10 @@ _echo () {
 	echo $@
 	echo $@ >> $DIR/check.log
 }
-	
+
+help () {
+	_echo "check.sh <start|compare|test>"
+}	
 
 getsigver () {
 	CURSIGVER=$(curl -s https://cdn.rfxn.com/downloads/maldet.sigs.ver)
@@ -21,6 +24,13 @@ processsigfile () {
 	tar -zxvf $DIR/maldet-sigpack.tgz
 }
 
+createtemp () {
+	mkdir -p $TEMP/new
+	mkdir -p $TEMP/current
+	cp -r $SIGS/* $TEMP/current/.	
+}
+
+comparefiles () {
 
 
 gitcommit () {	
@@ -29,34 +39,57 @@ gitcommit () {
 	git push		
 }
 
-_echo "Starting script in $DIR on $DATE"
+checksigupdate () {
+	# Check for Signature Update	
+	_echo "Checking for Signature Update"
 
-if [ ! -f $DIR/.cursigver ]; then
-        _echo "First run, no .cursigver present"
-        _echo "Grabbing signature file"
-        getsigver
-        _echo $CURSIGVER > $DIR/.cursigver
-        LASTSIGVER=$(cat $DIR/.cursigver)
+        # First time running?
+        if [ ! -f $DIR/.cursigver ]; then
+                _echo " - First run, no .cursigver present, creating one"
+                _echo $CURSIGVER > $DIR/.cursigver
+                LASTSIGVER=$(cat $DIR/.cursigver)
+        else
+                LASTSIGVER=$(cat $DIR/.cursigver)
+        fi
+		
+	if [ $CURSIGVER == $LASTSIGVER ]; then	
+		_echo " - No signature update."
+		_echo "Existing"
+	else
+		_echo " - Signature update detected"
+		_echo " - Processing signature archive"
+		processsigfile
+		_echo " - Comparing Files"
+		comparefiles
+		_echo " - Commiting to git"
+		gitcommit
+		_echo " - Updating .cursigver"
+		_echo $CURSIGVER > $DIR/.cursigver
+		_echo "Process complete, exiting"
+	fi
+}
+
+test () {
+	echo " - Test!"
+}
+
+start () {
+        # Start process
+        _echo "Starting script in $DIR on $DATE"
+        checksigupdate        
+}
+
+# *** Main Loop
+if [ ! $1 ]; then
+        help
 else
-	LASTSIGVER=$(cat $DIR/.cursigver)
+        if [ "$1" = "start" ]; then
+                start
+        elif [ "$1" = "compare" ]; then
+                comparefiles
+        elif [ "$1" = "test" ]; then
+        	test
+        else
+        	help
+        fi
 fi
-
-getsigver
-_echo "Current signature version $CURSIGVER"
-_echo "Last signature version $LASTSIGVER"
-
-if [ $CURSIGVER == $LASTSIGVER ]; then
-	_echo "No signature update."
-else
-	_echo "Signatures updated."
-	_echo "Processing archive"
-	processsigfile
-	comparefiles
-	gitcommit
-	_echo "Updating .cursigver"
-	_echo $CURSIGVER > $DIR/.cursigver
-	
-fi
-
-_echo "Exiting" 
-
