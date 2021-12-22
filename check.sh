@@ -17,42 +17,55 @@ getsigver () {
 	CURSIGVER=$(curl -s https://cdn.rfxn.com/downloads/maldet.sigs.ver)
 }
 
-processfiles () {
+createtemp () {
 	_echo "* Processing files"
 	_echo " - Downloading archive from https://cdn.rfxn.com/downloads/maldet-sigpack.tgz"
 	curl -O --output $DIR/maldet-sigpack.tgz https://cdn.rfxn.com/downloads/maldet-sigpack.tgz
 	_echo " - Extracting archive"
-	tar -zxvf $DIR/maldet-sigpack.tgz $TEMP/new
-}
+	tar -zxvf $DIR/maldet-sigpack.tgz --directory $TEMP/new
 
-createtemp () {
 	_echo "* Creating temp folders and files"
 	if [ -d $TEMP ]; then
 		echo " - Temp files detected deleting them"
-		rm $TEMP/new/*
-		rm $TEMP/current/*
+		rm -rf $TEMP/new
+		rm -rf $TEMP/current
 	fi
 	mkdir -p $TEMP/new
 	mkdir -p $TEMP/current
-	cp -R $SIGS/* $TEMP/current/.	
+	cp -R $SIGS $TEMP/current
+	
+        _echo " - Downloading archive from https://cdn.rfxn.com/downloads/maldet-sigpack.tgz"
+        curl -O --output $DIR/maldet-sigpack.tgz https://cdn.rfxn.com/downloads/maldet-sigpack.tgz
+        _echo " - Extracting archive"
+        tar -zxvf $DIR/maldet-sigpack.tgz --directory $TEMP/new
 }
 
 comparefiles () {
 	_echo "* Comparing files"
-	_echo " - Remove bits from *.db and rxfn.hdb"
-	sed -i "s/\.[0-9]*$//g" $TEMP/new/rxfn.hdb
-	sed -i "s/\.[0-9]*$//g" $TEMP/current/rxfn.hdb
-	sed -i "s/\.[0-9]*$//g" $TEMP/new/*.db
-	sed -i "s/\.[0-9]*$//g" $TEMP/current/*.db
+	_echo " - Remove bits from *.dat and rfxn.hdb"
+	sed -i "s/\.[0-9]*$//g" $TEMP/new/sigs/rfxn.hdb
+	sed -i "s/\.[0-9]*$//g" $TEMP/current/sigs/rfxn.hdb
+	sed -i "s/\.[0-9]*$//g" $TEMP/new/sigs/*.dat
+	sed -i "s/\.[0-9]*$//g" $TEMP/current/sigs/*.dat
 	
-	_echo " - Comapre rxfn.hdb"
-	diff $TEMP/new/rxfn.hdb $TEMP/current/rxfn.hdb -y --suppress-common-lines
-	
-        _echo " - Comapre *.db"
-        for f in $TEMP/new; do
-		echo "Processing $TEMP/new/$f against $TEMP/current/$f"
-		diff $TEMP/new/$f $TEMP/current/$f -y --suppress-common-lines
+	_echo " - Comapre rfxn.hdb"
+	echo "Processing new/sigs/rfxn.hdb against current/sigs/rfxn.hdb"
+	diff_rfxn=$(diff $TEMP/new/sigs/rfxn.hdb $TEMP/current/sigs/rfxn.hdb -y --suppress-common-lines)
+	_echo "******************"
+	_echo $diff_rfxn
+	_echo "******************"
+	 
+        _echo " - Compare *.dat"
+        for f in $TEMP/new/sigs/*.dat; do
+        	filename="${f##*/}"
+		echo "Processing new/sigs/$filename against current/sigs/$filename"
+		diff_dat=$(diff $TEMP/new/sigs/$filename $TEMP/current/sigs/$filename -y --suppress-common-lines)
+		diff_dat_all+="\n$filename\n--\n$diff_dat \n--"
 	done
+        _echo "******************"
+        echo -e $diff_dat_all
+        echo -e $diff_dat_all  >> $DIR/check.log
+        _echo "******************"
 	echo " - Done comparing files"
 }
 
@@ -112,7 +125,6 @@ else
         elif [ "$1" = "compare" ]; then comparefiles
         elif [ "$1" = "test" ]; then test
         elif [ "$1" = "temp" ]; then createtemp
-        elif [ "$1" = "process" ]; then processfiles         
         else help
         fi
 fi
