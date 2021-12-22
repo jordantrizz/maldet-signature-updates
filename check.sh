@@ -77,17 +77,17 @@ comparefiles () {
 	_echo " - Done comparing files"
 }
 
-gitcommit () {	
-	_echo " - *** Committing to git."
-	printf "Update on $DATE
-	Updated *.dat files
-	===================
-	$diff_dat_all
-	
-	Changes to rfxn.hdb
-	===================
-	$diff_rfxn" | git -C $DIR commit -a -F -
-	#git push		
+gitcommit () {
+        _echo " - *** Committing to git."
+        printf "Update on $DATE
+        Updated *.dat files
+        ===================
+        $diff_dat_all
+
+        Changes to rfxn.hdb
+        ===================
+        $diff_rfxn" | git -C $DIR commit -a -F -
+        #git push
 }
 
 checksigupdate () {
@@ -149,7 +149,7 @@ else
         elif [ "$1" = "compare" ]; then comparefiles
         elif [ "$1" = "test" ]; then test
         elif [ "$1" = "temp" ]; then createtemp
-        elif [ "$1" = "git" ]; then gitcommit
+        elif [ "$1" = "git" ]; then compare;gitcommit
         else help
         fi
 fi
